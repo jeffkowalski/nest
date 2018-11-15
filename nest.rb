@@ -72,11 +72,21 @@ class Nest < Thor
     influxdb = InfluxDB::Client.new 'nest'
 
     thermostats.values.each { |ts|
+      $logger.debug ts
       # ambient_temperature_f => 73
       # hvac_state => "heating", "cooling", "off"
       # last_connection => "2018-10-15T03:53:54.097Z"
 
       timestamp = DateTime.parse(ts['last_connection']).to_time.to_i
+
+      if not ts['fan_timer_active'].nil?
+        data = {
+          values: { value: ts['fan_timer_active'] },
+          tags:   { name_long: ts['name_long'] },
+          timestamp: timestamp
+        }
+        influxdb.write_point('fan_timer_active', data)
+      end
 
       if not ts['hvac_mode'].nil?
         data = {
