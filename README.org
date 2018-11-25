@@ -1,0 +1,16 @@
+nest - read status from nest thermostats and record to influxdb
+
+* Install
+bundle install
+* Authorize
+./nest.rb authorize --no-log --verbose
+* Scan
+Usage:
+  nest.rb record-status
+
+Options:
+      [--log], [--no-log]          # log output to ~/.log/.nest.log
+                                   # Default: true
+  -v, [--verbose], [--no-verbose]  # increase verbosity
+
+Record current usage data to database
