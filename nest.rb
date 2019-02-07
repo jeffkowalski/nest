@@ -115,6 +115,15 @@ class Nest < Thor
         influxdb.write_point('ambient_temperature_f', data)
       end
 
+      unless ts['target_temperature_f'].nil?
+        data = {
+          values: { value: ts['target_temperature_f'].to_f },
+          tags: { name_long: ts['name_long'] },
+          timestamp: timestamp
+        }
+        influxdb.write_point('target_temperature_f', data)
+      end
+
       unless ts['humidity'].nil?
         data = {
           values: { value: ts['humidity'].to_i },
