@@ -37,7 +37,6 @@ class Nest < Thor
 
   class_option :log,     type: :boolean, default: true, desc: "log output to #{LOGFILE}"
   class_option :verbose, type: :boolean, aliases: '-v', desc: 'increase verbosity'
-  class_option :dry_run, type: :boolean, aliases: '-d', desc: 'do not write to database'
 
   desc 'authorize', '[re]authorize the application'
   def authorize
@@ -57,6 +56,7 @@ class Nest < Thor
   end
 
   desc 'record-status', 'record the current usage data to database'
+  method_option :dry_run, type: :boolean, aliases: '-d', desc: 'do not write to database'
   def record_status
     setup_logger
     begin
