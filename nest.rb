@@ -12,6 +12,21 @@ require 'influxdb'
 LOGFILE = File.join(Dir.home, '.log', 'nest.log')
 CREDENTIALS_PATH = File.join(Dir.home, '.credentials', 'nest.yaml')
 
+module Kernel
+  def with_rescue(exceptions, logger, retries: 5)
+    try = 0
+    begin
+      yield try
+    rescue *exceptions => e
+      try += 1
+      raise if try > retries
+
+      logger.info "caught error #{e.class}, retrying (#{try}/#{retries})..."
+      retry
+    end
+  end
+end
+
 class Nest < Thor
   no_commands do
     def redirect_output
@@ -62,12 +77,14 @@ class Nest < Thor
     begin
       credentials = YAML.load_file CREDENTIALS_PATH
 
-      response = RestClient::Request.execute(
-        method: 'get',
-        url: 'https://developer-api.nest.com/devices/thermostats',
-        headers: { authorization: "Bearer #{credentials[:access_token]}",
-                   content_type: 'application/json' }
-      )
+      response = with_rescue([RestClient::Exceptions::OpenTimeout], @logger) do |_try|
+        RestClient::Request.execute(
+          method: 'get',
+          url: 'https://developer-api.nest.com/devices/thermostats',
+          headers: { authorization: "Bearer #{credentials[:access_token]}",
+                     content_type: 'application/json' }
+        )
+      end
       thermostats = JSON.parse response
       @logger.info thermostats
 
