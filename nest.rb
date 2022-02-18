@@ -67,7 +67,6 @@ class Nest < RecorderBotBase
                       timestamp: timestamp })
         end
       end
-      pp data
       influxdb.write_points data unless options[:dry_run]
     end
   end
