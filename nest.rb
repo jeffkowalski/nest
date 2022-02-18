@@ -49,9 +49,9 @@ class Nest < RecorderBotBase
 
         timestamp = Time.parse(ts['last_connection']).to_i
 
-        { 'fan_timer_active'      => ->(v) { v.to_s },
-          'hvac_mode'             => ->(v) { v.to_s },
-          'hvac_state'            => ->(v) { v.to_s },
+        { 'fan_timer_active'      => ->(v) { v },
+          'hvac_mode'             => ->(v) { v },
+          'hvac_state'            => ->(v) { v },
           'ambient_temperature_f' => ->(v) { v.to_f },
           'target_temperature_f'  => ->(v) { v.to_f },
           'humidity'              => ->(v) { v.to_i } }.each do |measure, transform|
