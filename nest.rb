@@ -38,9 +38,19 @@ class Nest < RecorderBotBase
       thermostats = JSON.parse response
       @logger.info thermostats
 
-      influxdb = InfluxDB::Client.new 'nest'
+      influxdb = InfluxDB::Client.new 'nest' unless options[:dry_run]
 
-      thermostats.values.each do |ts|
+      transforms = {
+        'fan_timer_active'      => ->(v) { v.to_s },
+        'hvac_mode'             => ->(v) { v.to_s },
+        'hvac_state'            => ->(v) { v.to_s },
+        'ambient_temperature_f' => ->(v) { v.to_f },
+        'target_temperature_f'  => ->(v) { v.to_f },
+        'humidity'              => ->(v) { v.to_i }
+      }
+
+      data = []
+      thermostats.each_value do |ts|
         @logger.debug ts
         # ambient_temperature_f => 73
         # hvac_state => "heating", "cooling", "off"
@@ -48,60 +58,17 @@ class Nest < RecorderBotBase
 
         timestamp = Time.parse(ts['last_connection']).to_i
 
-        unless ts['fan_timer_active'].nil?
-          data = {
-            values: { value: ts['fan_timer_active'] },
-            tags: { name_long: ts['name_long'] },
-            timestamp: timestamp
-          }
-          influxdb.write_point('fan_timer_active', data) unless options[:dry_run]
-        end
+        transforms.each do |measure, transform|
+          next if ts[measure].nil?
 
-        unless ts['hvac_mode'].nil?
-          data = {
-            values: { value: ts['hvac_mode'] },
-            tags: { name_long: ts['name_long'] },
-            timestamp: timestamp
-          }
-          influxdb.write_point('hvac_mode', data) unless options[:dry_run]
-        end
-
-        unless ts['hvac_state'].nil?
-          data = {
-            values: { value: ts['hvac_state'] },
-            tags: { name_long: ts['name_long'] },
-            timestamp: timestamp
-          }
-          influxdb.write_point('hvac_state', data) unless options[:dry_run]
-        end
-
-        unless ts['ambient_temperature_f'].nil?
-          data = {
-            values: { value: ts['ambient_temperature_f'].to_f },
-            tags: { name_long: ts['name_long'] },
-            timestamp: timestamp
-          }
-          influxdb.write_point('ambient_temperature_f', data) unless options[:dry_run]
-        end
-
-        unless ts['target_temperature_f'].nil?
-          data = {
-            values: { value: ts['target_temperature_f'].to_f },
-            tags: { name_long: ts['name_long'] },
-            timestamp: timestamp
-          }
-          influxdb.write_point('target_temperature_f', data) unless options[:dry_run]
-        end
-
-        unless ts['humidity'].nil?
-          data = {
-            values: { value: ts['humidity'].to_i },
-            tags: { name_long: ts['name_long'] },
-            timestamp: timestamp
-          }
-          influxdb.write_point('humidity', data) unless options[:dry_run]
+          data.push({ series: measure,
+                      values: { value: transform.call(ts[measure]) },
+                      tags: { name_long: ts['name_long'] },
+                      timestamp: timestamp })
         end
       end
+      pp data
+      influxdb.write_points data unless options[:dry_run]
     end
   end
 end
