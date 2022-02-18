@@ -40,15 +40,6 @@ class Nest < RecorderBotBase
 
       influxdb = InfluxDB::Client.new 'nest' unless options[:dry_run]
 
-      transforms = {
-        'fan_timer_active'      => ->(v) { v.to_s },
-        'hvac_mode'             => ->(v) { v.to_s },
-        'hvac_state'            => ->(v) { v.to_s },
-        'ambient_temperature_f' => ->(v) { v.to_f },
-        'target_temperature_f'  => ->(v) { v.to_f },
-        'humidity'              => ->(v) { v.to_i }
-      }
-
       data = []
       thermostats.each_value do |ts|
         @logger.debug ts
@@ -58,7 +49,12 @@ class Nest < RecorderBotBase
 
         timestamp = Time.parse(ts['last_connection']).to_i
 
-        transforms.each do |measure, transform|
+        { 'fan_timer_active'      => ->(v) { v.to_s },
+          'hvac_mode'             => ->(v) { v.to_s },
+          'hvac_state'            => ->(v) { v.to_s },
+          'ambient_temperature_f' => ->(v) { v.to_f },
+          'target_temperature_f'  => ->(v) { v.to_f },
+          'humidity'              => ->(v) { v.to_i } }.each do |measure, transform|
           next if ts[measure].nil?
 
           data.push({ series: measure,
