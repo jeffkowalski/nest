@@ -3,7 +3,7 @@ nest - read status from nest thermostats and record to influxdb
 * Install
 bundle install
 * Authorize
-./nest.rb authorize --no-log --verbose
+see instructions at https://developers.google.com/nest/device-access/get-started
 * Scan
 Usage:
   nest.rb record-status
@@ -14,3 +14,9 @@ Options:
   -v, [--verbose], [--no-verbose]  # increase verbosity
 
 Record current usage data to database
+* See also
+https://developers.google.com/nest/device-access/get-started
+https://console.nest.google.com/device-access/project-list
+https://console.cloud.google.com/apis/credentials
+
+https://github.com/kwoodson/thermostat/blob/master/thermo.py
