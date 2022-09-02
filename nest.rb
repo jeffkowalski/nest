@@ -36,7 +36,9 @@ class Nest < RecorderBotBase
       data = []
 
       url = BASE_NEST_URL + "enterprises/#{credentials[:project_id]}/devices"
-      response = RestClient.get(url, content_type: 'application/json', authorization: "Bearer #{credentials[:access_token]}")
+      response = with_rescue([RestClient::ServiceUnavailable], logger) do |_try|
+        RestClient.get(url, content_type: 'application/json', authorization: "Bearer #{credentials[:access_token]}")
+      end
       devices = JSON.parse(response)['devices']
       timestamp = DateTime.parse(response.headers[:date]).to_time.to_i
 
