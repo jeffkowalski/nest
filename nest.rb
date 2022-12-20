@@ -36,7 +36,7 @@ class Nest < RecorderBotBase
       data = []
 
       url = BASE_NEST_URL + "enterprises/#{credentials[:project_id]}/devices"
-      response = with_rescue([RestClient::InternalServerError, RestClient::ServiceUnavailable], logger) do |_try|
+      response = with_rescue([RestClient::Exceptions::OpenTimeout, RestClient::InternalServerError, RestClient::ServiceUnavailable], logger) do |_try|
         RestClient.get(url, content_type: 'application/json', authorization: "Bearer #{credentials[:access_token]}")
       end
       devices = JSON.parse(response)['devices']
