@@ -17,11 +17,13 @@ class Nest < RecorderBotBase
     def refresh_access_token
       credentials = load_credentials
 
-      response = RestClient.post('https://oauth2.googleapis.com/token',
-                                 client_id:     credentials[:client_id],
-                                 client_secret: credentials[:client_secret],
-                                 refresh_token: credentials[:refresh_token],
-                                 grant_type:    'refresh_token')
+      response = with_rescue([RestClient::Exceptions::OpenTimeout, RestClient::InternalServerError, RestClient::ServiceUnavailable], logger) do |_try|
+        RestClient.post('https://oauth2.googleapis.com/token',
+                        client_id:     credentials[:client_id],
+                        client_secret: credentials[:client_secret],
+                        refresh_token: credentials[:refresh_token],
+                        grant_type:    'refresh_token')
+      end
       token = JSON.parse(response)
       credentials[:access_token] = token['access_token']
       store_credentials credentials
